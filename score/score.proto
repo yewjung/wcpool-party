@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package = "party/score";
+
+package score; 
+
+service ScoreService {
+    rpc UpdateScore(Score) returns (google.protobuf.Empty) {}
+}
+
+message Score {
+    string email = 1;
+    string partyid = 2;
+    int32 score = 3;
+}
