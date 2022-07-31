@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthorizationClient interface {
-	VerifyPartyID(ctx context.Context, in *Verification, opts ...grpc.CallOption) (*wrapperspb.BoolValue, error)
+	VerifyPartyID(ctx context.Context, in *Verification, opts ...grpc.CallOption) (*VerificationResult, error)
 }
 
 type authorizationClient struct {
@@ -34,8 +33,8 @@ func NewAuthorizationClient(cc grpc.ClientConnInterface) AuthorizationClient {
 	return &authorizationClient{cc}
 }
 
-func (c *authorizationClient) VerifyPartyID(ctx context.Context, in *Verification, opts ...grpc.CallOption) (*wrapperspb.BoolValue, error) {
-	out := new(wrapperspb.BoolValue)
+func (c *authorizationClient) VerifyPartyID(ctx context.Context, in *Verification, opts ...grpc.CallOption) (*VerificationResult, error) {
+	out := new(VerificationResult)
 	err := c.cc.Invoke(ctx, "/authorization.Authorization/VerifyPartyID", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -47,7 +46,7 @@ func (c *authorizationClient) VerifyPartyID(ctx context.Context, in *Verificatio
 // All implementations must embed UnimplementedAuthorizationServer
 // for forward compatibility
 type AuthorizationServer interface {
-	VerifyPartyID(context.Context, *Verification) (*wrapperspb.BoolValue, error)
+	VerifyPartyID(context.Context, *Verification) (*VerificationResult, error)
 	mustEmbedUnimplementedAuthorizationServer()
 }
 
@@ -55,7 +54,7 @@ type AuthorizationServer interface {
 type UnimplementedAuthorizationServer struct {
 }
 
-func (UnimplementedAuthorizationServer) VerifyPartyID(context.Context, *Verification) (*wrapperspb.BoolValue, error) {
+func (UnimplementedAuthorizationServer) VerifyPartyID(context.Context, *Verification) (*VerificationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyPartyID not implemented")
 }
 func (UnimplementedAuthorizationServer) mustEmbedUnimplementedAuthorizationServer() {}

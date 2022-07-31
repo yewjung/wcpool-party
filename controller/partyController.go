@@ -22,7 +22,8 @@ func (pc *PartyController) GetLeaderboard(storage models.Storage) http.HandlerFu
 		// TODO: need to verify that user has access to this party
 
 		// Looking for a valid feature
-		if !pc.checkAuthorization(w, r, partyid, []authorization.Option{authorization.Option_PARTY_ID}) {
+		ok, _ := pc.checkAuthorization(w, r, partyid, []authorization.Option{authorization.Option_PARTY_ID})
+		if !ok {
 			return
 		}
 		partyService := service.PartyService{}
@@ -49,7 +50,8 @@ func (pc *PartyController) AddMemberToParty(storage models.Storage) http.Handler
 		// <partyid>$admin
 		// use email to find list of permission, use partyid to construct <partyid>$admin
 		// user's profile can have a field called permissions = [..., ..., ...]
-		if !pc.checkAuthorization(w, r, dto.PartyId, []authorization.Option{authorization.Option_PARTY_ID}) {
+		ok, _ := pc.checkAuthorization(w, r, dto.PartyId, []authorization.Option{authorization.Option_PARTY_ID})
+		if !ok {
 			return
 		}
 		partyService := service.PartyService{}
@@ -60,29 +62,31 @@ func (pc *PartyController) AddMemberToParty(storage models.Storage) http.Handler
 func (pc *PartyController) AddParty(storage models.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		party := utils.GetReqBody(r, models.Party{})
-		// TODO: validate token
-		pc.checkAuthorization(w, r, party.PartyId, nil)
+		ok, _ := pc.checkAuthorization(w, r, party.PartyId, nil)
+		if !ok {
+			return
+		}
 		partyService := service.PartyService{}
 		result, err := partyService.AddParty(storage, party.Name)
 		utils.HandleResponse(w, err, result)
 	}
 }
 
-func (pc *PartyController) checkAuthorization(w http.ResponseWriter, r *http.Request, partyid string, options []authorization.Option) bool {
-	boolWrap, err := pc.AuthClient.VerifyPartyID(context.Background(), &authorization.Verification{
+func (pc *PartyController) checkAuthorization(w http.ResponseWriter, r *http.Request, partyid string, options []authorization.Option) (bool, string) {
+	verRes, err := pc.AuthClient.VerifyPartyID(context.Background(), &authorization.Verification{
 		Token:   r.Header.Get("Authorization"),
 		Partyid: partyid,
 		Options: options,
 	})
 	if err != nil {
 		utils.HandleResponse(w, err, nil)
-		return false
+		return false, verRes.Email
 	}
-	if !boolWrap.Value {
+	if !verRes.Ok {
 		utils.SendError(w, http.StatusUnauthorized, models.Error{
 			Message: "Unauthorized action",
 		})
-		return false
+		return false, verRes.Email
 	}
-	return true
+	return true, verRes.Email
 }
